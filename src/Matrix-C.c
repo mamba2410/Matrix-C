@@ -23,7 +23,6 @@ int main(int argc, char** argv){
 		
 		//m3 = m_func(m1, fff);
 		//m_printf(m3);
-		//
 
 		m_destroy(m1);
 		m_destroy(m2);
