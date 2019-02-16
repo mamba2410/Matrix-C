@@ -6,7 +6,7 @@
 # Set compiler to gcc, give it gcc flags, linker flags, set name
 CC = gcc
 CFLAGS=
-LFLAGS=
+LFLAGS=-lm
 EXE_NAME=a.exe
 EXT=c
 
