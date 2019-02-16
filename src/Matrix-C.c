@@ -8,19 +8,23 @@ int main(int argc, char** argv){
 	srand(time(NULL));
 	
 	double m44[] = {1, 0, 0, 0, 0, 2, 0, 0, 0, 0, 3, 0, 0, 0, 0, 4};
-	matrix_t I4 = m_init(m44, 4, 4);
+	double dv1[] = {1, 0, 0};
+	double dv2[] = {0, 1, 0};
 
-	m_printf(I4);
-	
-	matrix_t m3;
-	m3 = m_minor(I4, 0, 3);
-	m_printf(m3);
+	matrix_t v1 = m_init(dv1, 3, 1);
+	matrix_t v2 = m_init(dv2, 3, 1);
 
-	printf("m_det: %f\n", m_det(I4));
-	printf("m_det: %f\n", m_det(m3));
-	
-	m_destroy(m3);
-	m_destroy(I4);
+	m_printf(v1);
+	m_printf(v2);
+
+	matrix_t v3 = v_cross(v1, v2);
+	m_printf(v3);
+	printf("Dot product: %f\n", v_dot(v1, v1));
+
+	m_destroy(v1);
+	m_destroy(v2);
+	m_destroy(v3);
+
 	return 0;
 }
 

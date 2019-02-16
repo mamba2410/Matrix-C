@@ -109,6 +109,68 @@ matrix_t m_func(matrix_t m, double(*f)(double)){
 }
 
 /*
+ * gets the vector dot product of two column vectors
+ * Vectors must be of the form nx1
+ * Output equivalent to d = m1 . m2
+ * matrix_t m1 - The first vector to dot
+ * matrix_t m2 - The second vector to dot
+ */
+double v_dot(matrix_t m1, matrix_t m2){
+	if(m1.rows != m2.rows || m1.columns != m2.columns || m1.columns != 1){
+		printf("Error: Size mismatch when vector dot product with %dx%d and %dx%d. Make sure they are column vectors", m1.rows, m1.columns, m2.rows, m2.columns);
+		return 0;
+	}
+	double d = 0;
+	for(index_t i = 0; i < m1.rows; i++)
+		d += m_get(m1, i, 0) * m_get(m2, i, 0);
+	return d;
+
+}
+
+/*
+ * Gets the vector cross product of the vectors.
+ * Currently only supports 3D vectors.
+ * Vectors must be of the form nx1.
+ * Output equivalent to m3 = m1 x m2
+ * matrix_t m1 - The first vector to cross
+ * matrix_t m2 - The second vector to cross
+ */
+matrix_t v_cross(matrix_t m1, matrix_t m2){
+	if(m1.columns != m2.columns || m1.columns != 1 || m1.rows != m2.rows || m1.rows != 3){
+		printf("Error: Cannot cross product a %dx%d and %dx%d. Make sure they are 3D column vectors\n", m1.rows, m1.columns, m2.rows, m2.columns);
+		return m1;
+	}
+	matrix_t m3 = m_make(m1.rows, 1), temp;
+	matrix_t intermediate = m_make(3, 3);
+	matrix_t zeros = m_make(1, 3);
+
+	temp = m_transpose(m1);
+	m_putr(intermediate, temp, 1);
+	m_destroy(temp);
+	temp = m_transpose(m2);
+	m_putr(intermediate, temp, 2);
+	m_destroy(temp);
+
+	for(index_t i = 0; i < m1.rows; i++){
+		m_putr(intermediate, zeros, 0);
+		m_put(intermediate, 1, 0, i);
+		m_put(m3, m_det(intermediate), i, 0);
+	}
+	m_destroy(zeros);
+	m_destroy(intermediate);
+	return m3;
+}
+
+/*
+ * Finds the magnitude of the vector
+ * Vector must be in the form nx1
+ * matrix_t m - The vector to find the magnitude of
+ */
+double v_mag(matrix_t m){
+	return m_rsqsum(m);
+}
+
+/*
  * One of the elementary row operations. Takes a row, and multiplies it by a scalar and adds it back in the matrix
  * matrix_t m - The matrix to operate on
  * index_t r - The row to manipulate
