@@ -64,6 +64,10 @@ matrix_t	m_putr(matrix_t, matrix_t, index_t);
 matrix_t	m_delr(matrix_t, index_t);
 matrix_t	m_delc(matrix_t, index_t);
 matrix_t	m_minor(matrix_t, index_t, index_t);
+double		m_getl(matrix_t, index_t);
+index_t		m_getlp(matrix_t, index_t);
+matrix_t	m_orderRows(matrix_t);
+matrix_t	m_shiftZeros(matrix_t);
 
 // Misc functions
 matrix_t	m_noise(matrix_t);

@@ -27,6 +27,7 @@ matrix_t m_make(index_t r, index_t c){
 	for(index_t i = 0; i < r*c; i++)
 		data[i] = 0.0;
 	matrix_t matrix = {data, r, c};
+	//printf("Generated matrix\n");
 	return matrix;
 }
 
@@ -37,6 +38,7 @@ matrix_t m_make(index_t r, index_t c){
 int m_destroy(matrix_t matrix){
 //	printf("Deleting pointer from %x\n", matrix.data);
 	free(matrix.data);
+	//printf("Destroyed matrix\n");
 	return 0;
 }
 
@@ -46,9 +48,8 @@ int m_destroy(matrix_t matrix){
  */
 matrix_t m_copy(matrix_t m){
 	matrix_t m2 = m_make(m.rows, m.columns);
-	for(index_t i = 0; i < m.rows*m.columns; i++){
+	for(index_t i = 0; i < m.rows*m.columns; i++)
 		m2.data[i] = m.data[i];
-	}
 	return m2;
 
 }
@@ -101,6 +102,7 @@ matrix_t m_scalar(matrix_t m, double s){
  * matrix_t m - The matrix to apply the function to
  * double (*f)(double) - A pointer to a function that takes a double and returns a double
  * Overwrites matrix data with results data
+ * Nice one
  */
 matrix_t m_func(matrix_t m, double(*f)(double)){
 	for(index_t i = 0; i < m.rows*m.columns; i++)
@@ -124,7 +126,6 @@ double v_dot(matrix_t m1, matrix_t m2){
 	for(index_t i = 0; i < m1.rows; i++)
 		d += m_get(m1, i, 0) * m_get(m2, i, 0);
 	return d;
-
 }
 
 /*
@@ -181,6 +182,7 @@ matrix_t eros_scalar(matrix_t m, index_t r, double s){
 	m_scalar(row, s);
 	m_putr(m, row, r);
 	m_destroy(row);
+	//printf("\t\tr%d *= %f\n", s);
 	return m;
 }
 
@@ -213,8 +215,73 @@ matrix_t eros_swap(matrix_t m, index_t i, index_t j){
 matrix_t eros_add(matrix_t m, index_t r, double s, index_t q){
 	matrix_t row = m_getr(m, q);
 	m_scalar(row, s);
+	matrix_t row2 = m_getr(m, r);
+	row = m_add(row, row2);
 	m_putr(m, row, r);
 	m_destroy(row);
+	m_destroy(row2);
+	//printf("\t\tr%d += %f r%d\n", r, s, q);
+	return m;
+}
+
+/*
+ * Takes a matrix and produces a copy in reduced echelon form.
+ */
+matrix_t m_ref(matrix_t mo){
+	matrix_t m = m_copy(mo);
+	double ril, rji;
+	index_t rilp;
+
+	for(index_t i = 0; i < m.rows; i++){
+		m_orderRows(m);
+		// Gets row i leader and the column of that leader
+		ril = m_getl(m, i);
+		rilp = m_getlp(m, i);
+		// Skip if zero row or out of bounds
+		if(rilp >= m.columns) continue;
+		// Modifies the whole row to make the leader 1
+		eros_scalar(m, i, 1.0/ril);
+		// Checks every row underneath the leader
+		for(index_t j = i; j < m.rows; j++){
+			if(j == i) continue;
+			// Gets the cell underneath i leader on the j column
+			rji = m_get(m, j, rilp);
+			// If not zero, make it zero
+			eros_add(m, j, -rji, i);
+		}
+	}
+	m_orderRows(m);
+	return m;
+}
+
+/*
+ * Takes a matrix and returns the row reduced echelon form 
+ * matrix_t m - The matrix
+ */
+matrix_t m_rref(matrix_t m){
+	// Put it in reduce echelon form first. Get half the work done
+	m = m_ref(m);
+	double ril, rji;
+	index_t rilp;
+	
+	// For each row, starting at the bottom
+	for(index_t i = m.rows-1; i > 0; i--){
+		// Get the leading digit and its position
+		ril = m_getl(m, i);
+		rilp = m_getlp(m, i);
+		// Skip if its a zero row or out of bounds
+		if(rilp >= m.columns) continue;
+
+		// For all rows above that row
+		for(index_t j = i; j >= 0 && j < m.rows; j--){
+			// Skip if it is this row
+			if(j == i) continue;
+			// Get the cell above this one
+			rji = m_get(m, j, rilp);
+			// Get rid of it
+			if(rji != 0) eros_add(m, j, -rji, i);
+		}
+	}
 	return m;
 }
 
@@ -404,6 +471,89 @@ matrix_t m_minor(matrix_t m, index_t r, index_t c){
 	return m2;
 }
 
+/*
+ * Gets the leading entry of a row of a matrix from a given row
+ * matrix_t m - The matrix
+ * index_t r - The row to find the leading entry of
+ */
+double m_getl(matrix_t m, index_t r){
+	matrix_t row = m_getr(m, r);
+	double l = 0;
+	for(index_t i = 0; i < m.columns; i++){
+		l = m_get(row, 0, i);
+		if(l != 0) break;
+	}
+	m_destroy(row);
+	return l;
+
+}
+
+/*
+ * gets the column of the leading entry in a matrix, on a given row
+ * matrix_t m - The matrix to use
+ * index_t r - The row of the leading entry
+ */
+index_t m_getlp(matrix_t m, index_t r){
+	index_t c = 0;
+	matrix_t row = m_getr(m, r);
+	double l = 0;
+	for(index_t i = 0; i < m.columns; i++){
+		l = m_get(row, 0, i);
+		if(l != 0) break;
+		c++;
+	}
+	m_destroy(row);
+	return c;
+}
+
+/*
+ * Puts rows in staircase pattern. Zero rows at bottom and 
+ * matrix_t m - The matrix to order
+ */
+matrix_t m_orderRows(matrix_t m){
+	index_t hlp=0, hlr, bottom=m.rows-1, lp;
+
+	// For each row
+	for(index_t j = 0; j < m.rows; j++){
+		hlp = 0;
+
+		// For each row that isn't in place
+		// Fill from the bottom
+		for(index_t i = bottom; i >= 0 && i < m.rows; i--){
+			// Where is the leading digit
+			lp = m_getlp(m, i);
+			// If its further right than the highest
+			if(lp >= hlp){
+				// Set that as current highest and save which row
+				hlp = lp;
+				hlr = i;
+			}
+		}
+		// Once checked each row above, put the highest row on the 'stack'
+		eros_swap(m, hlr, bottom);
+		// Move the 'stack pointer' up
+		bottom--;
+	}
+
+	return m;
+}
+
+/*
+ * Puts every zero row on the bottom of the matrix
+ * matrix_t m - The matrix to manipulate
+ */
+matrix_t m_shiftZeros(matrix_t m){
+	index_t last = m.rows-1;
+	index_t lp;
+	for(index_t i = 0; i < last; i++){
+		lp = m_getlp(m, i);
+		if(lp >= m.columns){
+			eros_swap(m, i, last);
+			last--;
+		}
+	}
+	return m;
+}
 
 /*
  * Takes a matrix and replaces its contents with 'noise', random double between 0 and 1
