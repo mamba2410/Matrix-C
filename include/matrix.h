@@ -29,6 +29,7 @@ matrix_t	m_init(double *data, index_t r, index_t c);
 matrix_t	m_make(index_t r, index_t c);
 int			m_destroy(matrix_t matrix);
 matrix_t	m_copy(matrix_t);
+matrix_t	m_getI(index_t);
 
 // Vector space matrix functions
 matrix_t	m_add(matrix_t, matrix_t);

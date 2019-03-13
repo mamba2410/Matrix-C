@@ -23,11 +23,9 @@ matrix_t m_init(double *data, index_t r, index_t c){
  */
 matrix_t m_make(index_t r, index_t c){
 	double *data = (double*)malloc(sizeof(double) * r * c);
-//	printf("Got pointer from %x\n", data);
 	for(index_t i = 0; i < r*c; i++)
 		data[i] = 0.0;
 	matrix_t matrix = {data, r, c};
-	//printf("Generated matrix\n");
 	return matrix;
 }
 
@@ -36,9 +34,7 @@ matrix_t m_make(index_t r, index_t c){
  * matrix_t *matrix - The matrix to be destroyed
  */
 int m_destroy(matrix_t matrix){
-//	printf("Deleting pointer from %x\n", matrix.data);
 	free(matrix.data);
-	//printf("Destroyed matrix\n");
 	return 0;
 }
 
@@ -54,6 +50,17 @@ matrix_t m_copy(matrix_t m){
 
 }
 
+/*
+ * Gets the identity matrix of a certain size, n
+ * index_t n - The size of the matrix
+ */
+matrix_t m_getI(index_t n){
+	matrix_t I = m_make(n, n);
+	for(index_t i = 0; i < n; i++)
+		m_put(I, 1.0, i, i);
+
+	return I;
+}
 
 /*
  * Adds two matrices together, reated like vector addition
@@ -102,7 +109,6 @@ matrix_t m_scalar(matrix_t m, double s){
  * matrix_t m - The matrix to apply the function to
  * double (*f)(double) - A pointer to a function that takes a double and returns a double
  * Overwrites matrix data with results data
- * Nice one
  */
 matrix_t m_func(matrix_t m, double(*f)(double)){
 	for(index_t i = 0; i < m.rows*m.columns; i++)
@@ -344,6 +350,36 @@ double m_det(matrix_t m){
 		}
 	}
 	return d;
+}
+
+/*
+ * Produces a copy of the matrix's inverse
+ * matrix_t m - The matrix to get the inverse of
+ */
+matrix_t m_inverse(matrix_t m){
+	if(m.rows != m.columns){
+		printf("ERROR: canot find inverse of %dx%d matrix. Matrix not square.\n", m.rows, m.columns);
+		return m;
+	}
+	double det = m_det(m);
+	if(det == 0){
+		printf("ERROR: Determinant of matrix zero, cannot find inverse.\n");
+		return m;
+	}
+	matrix_t minor_temp, inverse, C = m_copy(m);
+	for(index_t i = 0; i < m.rows; i++){
+		for(index_t j = 0; j < m.columns; j++){
+				minor_temp = m_minor(m, i, j);
+				m_put(C, m_det(minor_temp) * ( (i+j)%2? -1: 1), i, j);
+				m_destroy(minor_temp);
+		}
+	}
+	
+	inverse = m_transpose(C);
+	m_destroy(C);
+	m_scalar(inverse, 1/det);
+	return inverse;
+
 }
 
 /*
@@ -622,8 +658,11 @@ double m_rms(matrix_t m){
 void m_printf(matrix_t matrix){
 	printf("\n");
 	for(index_t r = 0; r < matrix.rows; r++){
-		for(index_t c = 0; c < matrix.columns; c++)
+		for(index_t c = 0; c < matrix.columns; c++){
+			if(m_get(matrix, r, c) >= 0)
+				printf(" ");
 			printf("%f\t", m_get(matrix, r, c));
+		}
 		printf("\n");
 	}
 	printf("\n");

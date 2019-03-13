@@ -6,8 +6,8 @@
 # Set compiler to gcc, give it gcc flags, linker flags, set name
 CC = gcc
 CFLAGS=
-LFLAGS=-lm -fno-signed-zeros
-EXE_NAME=a.exe
+LFLAGS=-lm 
+EXE_NAME=matrices.exe
 EXT=c
 
 # Tells make what directories to look in for things
