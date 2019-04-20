@@ -1,14 +1,16 @@
 #ifndef MATRIX_H
 #define MATRIX_H
 
-#include <matrix_utils.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <math.h>
 
 // Gets the size of the matrix object
 #define MATRIX_SIZE sizeof(struct matrix)
 
+// Define a new data type for indexes
+typedef unsigned int index_t;
 
 /*
  *	The actual matrix structure.
@@ -78,8 +80,11 @@ double		m_sqsum(matrix_t);
 double		m_rsqsum(matrix_t);
 double		m_rms(matrix_t);
 
-// Printing and formatting
+// Printing, storing and formatting
 void		m_print(matrix_t);
 void		m_printf(matrix_t);
+void		m_storef(matrix_t, char*, char);
+matrix_t	m_loadf(char*);
+matrix_t*	m_bloadf(char*, index_t);
 
 #endif

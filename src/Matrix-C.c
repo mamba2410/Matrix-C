@@ -8,24 +8,25 @@ int main(int argc, char** argv){
 	srand(time(NULL));
 	
 	matrix_t m4 = m_make(4, 4);
-	matrix_t inv, prod, I;
-
+	matrix_t m1 = m_make(3, 2);
 	m_noise(m4);
+	m_noise(m1);
+	
+	m_storef(m4, "m4.m", 'w');
+	m_storef(m1, "m4.m", 'a');
+	
+	matrix_t *ms = m_bloadf("m4.m", 2);
+	
+	m_printf(m4);
+	m_printf(ms[0]);
 
-	inv = m_inverse(m4);
-	m_printf(inv);
+	m_printf(m1);
+	m_printf(ms[1]);
 
-	prod = m_product(inv, m4);
-	m_printf(prod);
-
-	I = m_getI(3);
-	m_printf(I);
-
+	m_destroy(m1);
+	m_destroy(ms[1]);
 	m_destroy(m4);
-	m_destroy(inv);
-	m_destroy(prod);
-	m_destroy(I);
-
+	m_destroy(ms[0]);
 	return 0;
 }
 

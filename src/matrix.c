@@ -1,6 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
-
 #include <matrix.h>
 
 /*
@@ -668,5 +665,71 @@ void m_printf(matrix_t matrix){
 	printf("\n");
 }
 
+/*
+ * Stores a matrix in a given file. Can write or append.
+ * char* fname - The file name to store in. Matrix is stored in binary.
+ * char mode - Either 'w' for write, or 'a' for append
+ * matrix_t m - The matrix to store
+ */
+void m_storef(matrix_t m, char* fname, char mode){
+	FILE *f = NULL;
+
+	if(mode == 'w')
+		f = fopen(fname, "wb");
+	else if(mode == 'a')
+		f = fopen(fname, "ab");
+
+	if(f == NULL){
+		printf("Error opening file to write to. Aborting.\n");
+		return;
+	}
+	
+	fwrite( &m.rows, sizeof(index_t), 1, f );
+	fwrite( &m.columns, sizeof(index_t), 1, f );
+
+	for(index_t i = 0; i < m.rows*m.columns; i++){
+		fwrite( (m.data+i), sizeof(double), 1, f );
+	}
+	fclose(f);
+}
+
+/*
+ * Loads matrices in bulk from a file and returns them in an array of length l
+ * char* fname - The file name to read from
+ * index_t l - The number of matrices to read from t he file
+ */
+matrix_t* m_bloadf(char* fname, index_t l){
+	FILE *f = NULL;
+	f = fopen(fname, "rb");
+	if(f == NULL){
+		printf("Error opening file to read from. Aborting.\n");
+		return NULL;
+	}
+	index_t rows, columns;
+	matrix_t *ms = (matrix_t*)malloc(sizeof(matrix_t)*l);
+	//matrix_t ms[l];
+	for(index_t j = 0; j < l; j++){
+		fread( &rows, sizeof(index_t), 1, f );
+		fread( &columns, sizeof(index_t), 1, f );
+	
+		ms[j] = m_make(rows, columns);
+		for(index_t i = 0; i < ms[j].rows*ms[j].columns; i++){
+			fread( (ms[j].data+i), sizeof(double), 1, f );
+		}
+	}
+	fclose(f);
+	return ms;
+}
+
+/*
+ * Reads a matrix from a file. Reads only the first one if multiple are stored in there
+ * char* fname - The file name to read from
+ */
+matrix_t m_loadf(char* fname){
+	matrix_t *ms = m_bloadf(fname, 1);
+	matrix_t m = ms[0];
+	free(ms);
+	return m;
+}
 
 
