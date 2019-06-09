@@ -2,20 +2,18 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <matrix.h>
+#include <cmx_matrix.h>
 
 // Dev branch stuff
 int main(int argc, char** argv){
-	srand(time(NULL));
-	
-	matrix_t *ms = m_bloadf("m4.m", 2);
-	
-	m_printf(ms[0]);
-	m_printf(ms[1]);
 
-	m_destroy(ms[1]);
-	m_destroy(ms[0]);
-	free(ms);
+	srand(time(NULL));
+
+	cmx_matrix_t m2 = cmx_load_matrix("m4.m");
+
+	cmx_printf(m2);
+
+	cmx_destroy(m2);
 	return 0;
 }
 
