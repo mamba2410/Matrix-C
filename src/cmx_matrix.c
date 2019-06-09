@@ -666,12 +666,13 @@ void cmx_printf(cmx_matrix_t matrix){
 }
 
 /*
- * Stores a matrix in a given file. Can write or append.
+ * Stores an array of matrices in a given file. Can write or append.
+ * cmx_matrix *m - The pointer of the array to store
+ * size_t length - The length of the array to store
  * char* fname - The file name to store in. Matrix is stored in binary.
- * char mode - Either 'w' for write, or 'a' for append
- * cmx_matrix_t m - The matrix to store
+ * char mode - 'w'rite or 'a'ppend to the file
  */
-void cmx_store_file(cmx_matrix_t m, char* fname, char mode){
+void cmx_store_file(cmx_matrix_t *m, size_t length, char* fname, char mode){
 	FILE *f = NULL;
 
 	if(mode == 'w')
@@ -679,21 +680,37 @@ void cmx_store_file(cmx_matrix_t m, char* fname, char mode){
 	else if(mode == 'a')
 		f = fopen(fname, "ab");
 	else
-		printf("Error opening file. Write mode \'%c\'not recognised", mode);
+		printf("Error opening \'%s\'. Write mode \'%c\'not recognised", fname, mode);
 
 	if(f == NULL){
-		printf("Error opening file to write to. Aborting.\n");
+		printf("Error opening \'%s\' to write to. Aborting.\n", fname);
 		fclose(f);
 		return;
 	}
-	
-	fwrite( &m.rows, sizeof(size_t), 1, f );
-	fwrite( &m.columns, sizeof(size_t), 1, f );
 
-	for(size_t i = 0; i < m.rows*m.columns; i++){
-		fwrite( (m.data+i), sizeof(double), 1, f );
+	for(size_t i = 0; i < length; i++){
+	
+		fwrite( &(m[i].rows), sizeof(size_t), 1, f );
+		fwrite( &(m[i].columns), sizeof(size_t), 1, f );
+
+		for(size_t j = 0; j < m[i].rows*m[i].columns; j++){
+			fwrite( (m[i]).data + j, sizeof(double), 1, f );
+		}
 	}
+
 	fclose(f);
+}
+
+
+/*
+ * Stores a singular matrix in the file specified.
+ * Can either write over with 'w' or append with 'a'
+ * cmx_matrix_m - The matrix to be stored
+ * char* fname - The file to be stored in
+ * char mode - 'w'rite or 'a'ppend to the file
+ */
+void cmx_store_matrix(cmx_matrix_t m, char* fname, char mode){
+	cmx_store_file(&m, 1, fname, mode);
 }
 
 /*

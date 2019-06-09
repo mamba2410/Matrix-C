@@ -80,7 +80,8 @@ double			cmx_rms(cmx_matrix_t);
 // Printing, storing and formatting
 void			cmx_print(cmx_matrix_t);
 void			cmx_printf(cmx_matrix_t);
-void			cmx_store_file(cmx_matrix_t, char*, char);
+void			cmx_store_matrix(cmx_matrix_t, char*, char);
+void			cmx_store_file(cmx_matrix_t*, size_t, char*, char);
 cmx_matrix_t	cmx_load_matrix(char*);
 cmx_matrix_t*	cmx_load_file(char*, size_t);
 
