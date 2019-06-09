@@ -26,7 +26,7 @@ typedef struct cmx_matrix {
 // Initialisation of matrices
 cmx_matrix_t	cmx_init(double *data, size_t r, size_t c);
 cmx_matrix_t	cmx_make(size_t r, size_t c);
-int				cmx_destroy(cmx_matrix_t);
+void				cmx_destroy(cmx_matrix_t);
 cmx_matrix_t	cmx_copy(cmx_matrix_t);
 cmx_matrix_t	cmx_identity(size_t);
 

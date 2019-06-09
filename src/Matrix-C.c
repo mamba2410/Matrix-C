@@ -22,16 +22,12 @@ int main(int argc, char** argv){
 	cmx_printf(ms[1]);
 
 	cmx_store_file(ms, 2, "m3.m", 'w');
-	cmx_store_matrix(m2, "m2.m", 'w');
+	
+	printf("Matrices stored, moving on to loading.\n");
 
 	cmx_matrix_t *ms2 = cmx_load_file("m3.m", 2);
 	cmx_printf(ms2[0]);
 	cmx_printf(ms2[1]);
-
-	cmx_destroy(m2);
-	m2 = cmx_load_matrix("m2.m");
-
-	cmx_printf(m2);
 
 	cmx_destroy(m1);
 	cmx_destroy(m2);

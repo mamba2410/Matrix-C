@@ -30,9 +30,8 @@ cmx_matrix_t cmx_make(size_t r, size_t c){
  * Destroys a given matrix, freeing the data used by the matrix
  * cmx_matrix_t *matrix - The matrix to be destroyed
  */
-int cmx_destroy(cmx_matrix_t matrix){
+void cmx_destroy(cmx_matrix_t matrix){
 	free(matrix.data);
-	return 0;
 }
 
 /*
@@ -670,32 +669,26 @@ void cmx_printf(cmx_matrix_t matrix){
  * cmx_matrix *m - The pointer of the array to store
  * size_t length - The length of the array to store
  * char* fname - The file name to store in. Matrix is stored in binary.
- * char mode - 'w'rite or 'a'ppend to the file
+ * char mode - 'w'rite or 'a'ppend to the file. Defaults to 'w'
  */
-void cmx_store_file(cmx_matrix_t *m, size_t length, char* fname, char mode){
+void cmx_store_file(cmx_matrix_t *ms, size_t length, char* fname, char mode){
 	FILE *f = NULL;
 
-	if(mode == 'w')
-		f = fopen(fname, "wb");
-	else if(mode == 'a')
-		f = fopen(fname, "ab");
-	else
-		printf("Error opening \'%s\'. Write mode \'%c\'not recognised", fname, mode);
+	if(mode == 'a') f = fopen(fname, "ab");
+	else f = fopen(fname, "wb");
 
 	if(f == NULL){
-		printf("Error opening \'%s\' to write to. Aborting.\n", fname);
+		printf("Error: Cannot open \'%s\' for writing.\n", fname);
 		fclose(f);
 		return;
 	}
 
-	for(size_t i = 0; i < length; i++){
-	
-		fwrite( &(m[i].rows), sizeof(size_t), 1, f );
-		fwrite( &(m[i].columns), sizeof(size_t), 1, f );
+	for(size_t j = 0; j < length && ms[j].data != 0; j++){
+		fwrite( &(ms[j].rows), sizeof(ms[j].rows), 1, f );
+		fwrite( &(ms[j].columns), sizeof(ms[j].columns), 1, f );
 
-		for(size_t j = 0; j < m[i].rows*m[i].columns; j++){
-			fwrite( (m[i]).data + j, sizeof(double), 1, f );
-		}
+		size_t i = 0, len = ms[j].rows * ms[j].columns;
+		for(; i < len; i++)	fwrite( (ms[j]).data + i, sizeof( (ms[j]).data[0] ), 1, f);
 	}
 
 	fclose(f);
@@ -722,24 +715,29 @@ cmx_matrix_t* cmx_load_file(char* fname, size_t l){
 	FILE *f = NULL;
 	f = fopen(fname, "rb");
 	if(f == NULL){
-		printf("Error opening file to read from. Aborting.\n");
+		printf("Error: Cannot open file \'%s\' for reading.\n", fname);
 		fclose(f);
 		return NULL;
 	}
-	printf("");
-	size_t rows, columns;
-	cmx_matrix_t *ms = (cmx_matrix_t*)malloc(sizeof(cmx_matrix_t)*l);
-	//cmx_matrix_t ms[l];
-	for(size_t j = 0; j < l; j++){
-		fread( &rows, sizeof(size_t), 1, f );
-		fread( &columns, sizeof(size_t), 1, f );
 	
-		ms[j] = cmx_make(rows, columns);
-		for(size_t i = 0; i < ms[j].rows*ms[j].columns; i++){
-			fread( (ms[j].data+i), sizeof(double), 1, f );
-		}
+	// Issues if user inputs negative number
+	// l won't be negative, but very large and will likely throw segfault
+	// and try to allocate multiple GB of memory.
+	// TODO: Find a way to restrict malloc call size
+	// See if theres a malloc max allocate define, if not, create one
+	cmx_matrix_t *ms = (cmx_matrix_t*)malloc(l * CMX_MATRIX_SIZE);
+
+	size_t rows, columns;
+	for(size_t j = 0; j < l; j++){
+		if( fread(&rows, sizeof(rows), 1, f) && fread(&columns, sizeof(columns), 1, f) ){
+			ms[j] = cmx_make(rows, columns);
+			size_t i = 0, len = ms[j].rows*ms[j].columns;
+			for(i = 0; i < len; i++) fread( (ms[j].data)+i, sizeof(double), 1, f );
+
+		} else break;
 	}
 	fclose(f);
+
 	return ms;
 }
 

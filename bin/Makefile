@@ -39,8 +39,8 @@ run:	build
 	@./$(EXE_NAME)
 
 clean:
-	rm -rf $(OBJ_DIR)
-	rm $(EXE_NAME)
-	mkdir -p $(OBJ_DIR)
+	rm -rf $(OBJ_DIR);
+	rm $(EXE_NAME);
+	mkdir -p $(OBJ_DIR);
 
 include buildnumber.mak
