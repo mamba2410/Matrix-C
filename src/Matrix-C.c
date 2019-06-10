@@ -1,6 +1,4 @@
-#include <stdio.h>
 #include <stdint.h>
-#include <stdlib.h>
 
 #include <cmx_matrix.h>
 
@@ -16,8 +14,10 @@ int main(int argc, char** argv){
 	cmx_noise(m2);
 
 	cmx_matrix_t *ms = (cmx_matrix_t*)malloc( 2 * CMX_MATRIX_SIZE );
-	ms[0] = m1;
-	ms[1] = m2;
+	//ms[0] = m1;
+	//ms[1] = m2;
+	CMX_ARRAY_ASSIGN(ms[0], m1);
+	CMX_ARRAY_ASSIGN(ms[1], m2);
 	cmx_printf(ms[0]);
 	cmx_printf(ms[1]);
 
@@ -29,10 +29,9 @@ int main(int argc, char** argv){
 	cmx_printf(ms2[0]);
 	cmx_printf(ms2[1]);
 
-	cmx_destroy(m1);
-	cmx_destroy(m2);
-	free(ms);
-	free(ms2);
+
+	ms = cmx_destroy_all(ms, 3);
+	ms2 = cmx_destroy_all(ms2, 2);
 	return 0;
 }
 

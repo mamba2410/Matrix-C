@@ -5,9 +5,29 @@
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
+#include <string.h>
 
-// Gets the size of the Matrix object
-#define CMX_MATRIX_SIZE sizeof(struct cmx_matrix)
+
+// Define max data bytes as 8GiB
+// This is 2^33 bits
+#define CMX_MAX_BYTES 0x200000000
+
+// size_t is 8 bytes on 64-bit, so max data length is 2^(8*8) = 2^64
+// However, max bytes is 8GiB so only 32-bit will fit
+#define CMX_MAX_DATA_LENGTH 0x100000000
+
+// Max side length of matrix will be square root of max data length
+// This is 16 bits, or 2 bytes
+#define CMX_MAX_SIDE_LENGTH 0x10000
+
+// Set max array length to max bytes / the size of a matrix
+#define CMX_MAX_ARRAY_LENGTH CMX_MAX_BYTES/CMX_MATRIX_SIZE
+
+// Define a macro to initialise a matrix array from the heap
+#define CMX_ARRAY_ASSIGN(array_position, m) \
+	memcpy((void*)(&array_position), (void*)(&m), CMX_MATRIX_SIZE);
+
+
 
 /*
  *	The actual Matrix structure.
@@ -19,14 +39,22 @@
  *	Note: The size of the data array must equal r*c
  */
 typedef struct cmx_matrix {
-	double *data;
-	size_t rows, columns;
+	double * const data;
+	const size_t rows, columns, length;
 } cmx_matrix_t;
 
+
+// Gets the size of the Matrix object
+// sizeof operator is apparently evaluated at compile time
+#define CMX_MATRIX_SIZE sizeof(cmx_matrix_t)
+
 // Initialisation of matrices
-cmx_matrix_t	cmx_init(double *data, size_t r, size_t c);
-cmx_matrix_t	cmx_make(size_t r, size_t c);
-void				cmx_destroy(cmx_matrix_t);
+cmx_matrix_t	cmx_init(double*, size_t, size_t);
+cmx_matrix_t	cmx_init_copy(double*, size_t, size_t);
+cmx_matrix_t	cmx_make(size_t, size_t);
+void			cmx_destroy(cmx_matrix_t);
+void			cmx_destroy_contents(cmx_matrix_t*, size_t);
+cmx_matrix_t*	cmx_destroy_all(cmx_matrix_t*, size_t);
 cmx_matrix_t	cmx_copy(cmx_matrix_t);
 cmx_matrix_t	cmx_identity(size_t);
 
