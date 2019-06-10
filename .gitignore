@@ -1,4 +1,5 @@
 bin/objects/*
+bin/build_number.txt
 *.m
 *.a
 *.exe
